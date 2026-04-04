@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Mesas · Fabián & Esmeralda</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold: #c9a227; --gold-l: #e8d08a; --gold-d: #8b6508;
+  --cream: #fdf8ef; --brown: #3a2800; --brown-m: #6b4c00;
+  --green: #1a6b3c; --green-l: #e8f5ee;
+  --red: #8b1a1a; --red-l: #fdf0f0;
+  --blue: #1a3a6b; --blue-l: #eef3fd;
+  --gray: #f5f3ee; --border: #e0d0a0;
+}
+body { font-family: 'Lato', sans-serif; background: var(--cream); color: var(--brown); min-height: 100vh; }
+
+/* LOGIN */
+#loginScreen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(160deg, #1a0f00 0%, #2e1a00 55%, #1a0f00 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 2rem;
+}
+#loginScreen.hidden { display: none; }
+.login-box {
+  background: rgba(253,248,239,0.06); border: 1px solid rgba(201,162,39,0.35);
+  border-radius: 20px; padding: 3rem 2.5rem; width: min(400px, 92vw);
+  text-align: center; backdrop-filter: blur(4px);
+}
+.login-seal {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f5e090, #c9a227 50%, #8b6508);
+  border: 2px solid #e8d08a; margin: 0 auto 1.5rem;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif; font-size: 22px;
+  font-style: italic; color: #3a2800;
+}
+.login-title {
+  font-family: 'Cormorant Garamond', serif; font-size: 26px;
+  color: #e8d08a; margin-bottom: .3rem;
+}
+.login-sub {
+  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 3px;
+  color: rgba(201,162,39,0.6); margin-bottom: 2rem;
+}
+.login-input {
+  width: 100%; padding: 12px 16px; border-radius: 10px;
+  border: 1px solid rgba(201,162,39,0.4); background: rgba(255,255,255,0.08);
+  color: #e8d08a; font-size: 16px; text-align: center;
+  letter-spacing: 4px; font-family: 'Lato', sans-serif;
+  margin-bottom: 1rem; outline: none;
+}
+.login-input::placeholder { letter-spacing: 1px; color: rgba(232,208,138,0.4); font-size: 13px; }
+.login-input:focus { border-color: var(--gold); }
+.login-btn {
+  width: 100%; padding: 12px; background: var(--gold);
+  color: #1a0f00; border: none; border-radius: 10px;
+  font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 3px;
+  cursor: pointer; transition: background .2s; font-weight: 700;
+}
+.login-btn:hover { background: var(--gold-l); }
+.login-error {
+  color: #f0a0a0; font-size: 12px; margin-top: .8rem;
+  min-height: 18px; font-style: italic;
+}
+.login-hint {
+  color: rgba(232,208,138,0.4); font-size: 11px;
+  margin-top: 1.5rem; letter-spacing: 1px;
+}
+#appContent { display: none; }
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #1a0f00, #2e1a00);
+  padding: 1.2rem 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 1rem;
+}
+.header-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--gold-l); font-style: italic; }
+.header-sub { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 3px; color: var(--gold); margin-top: 2px; }
+.stats-bar { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.stat { text-align: center; }
+.stat-num { font-size: 20px; font-weight: 700; color: var(--gold-l); }
+.stat-label { font-size: 10px; letter-spacing: 1px; color: rgba(232,208,138,0.6); }
+
+/* LAYOUT */
+.app { display: grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 80px); }
+@media(max-width: 900px) { .app { grid-template-columns: 1fr; } }
+
+/* PANEL IZQUIERDO */
+.panel-left { background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+.panel-section { padding: 1.2rem; border-bottom: 1px solid var(--border); }
+.panel-title { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 2px; color: var(--gold-d); margin-bottom: 1rem; }
+
+/* Agregar invitado */
+.add-form { display: flex; flex-direction: column; gap: 8px; }
+.add-form input, .add-form select {
+  padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-family: 'Lato', sans-serif; font-size: 13px; color: var(--brown);
+  background: var(--cream); width: 100%;
+}
+.add-form input:focus, .add-form select:focus { outline: none; border-color: var(--gold); }
+.btn-add {
+  background: var(--gold); color: white; border: none; border-radius: 8px;
+  padding: 9px; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 1px;
+  cursor: pointer; transition: background 0.2s;
+}
+.btn-add:hover { background: var(--gold-d); }
+
+/* Filtros */
+.filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
+  font-size: 11px; cursor: pointer; background: white; color: var(--brown-m);
+  transition: all 0.2s;
+}
+.filter-btn.active { background: var(--gold); color: white; border-color: var(--gold); }
+
+/* Lista invitados */
+.guest-list { flex: 1; overflow-y: auto; max-height: 460px; }
+.guest-item {
+  padding: 10px 1.2rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+  cursor: grab; transition: background 0.15s;
+  user-select: none;
+}
+.guest-item:hover { background: var(--gray); }
+.guest-item.dragging { opacity: 0.4; background: var(--gold-l); }
+.guest-avatar {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+.av-pending { background: var(--blue-l); color: var(--blue); }
+.av-confirmed { background: var(--green-l); color: var(--green); }
+.av-declined { background: var(--red-l); color: var(--red); }
+.av-assigned { background: #f5ead0; color: var(--gold-d); }
+.guest-info { flex: 1; min-width: 0; }
+.guest-name { font-size: 13px; font-weight: 700; color: var(--brown); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.guest-meta { font-size: 11px; color: var(--brown-m); }
+.guest-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 10px; flex-shrink: 0;
+}
+.badge-pending { background: var(--blue-l); color: var(--blue); }
+.badge-confirmed { background: var(--green-l); color: var(--green); }
+.badge-declined { background: var(--red-l); color: var(--red); }
+.badge-assigned { background: #f5ead0; color: var(--gold-d); }
+
+.drag-hint { font-size: 11px; color: var(--brown-m); padding: 0.8rem 1.2rem; text-align: center; opacity: 0.7; font-style: italic; }
+
+/* PANEL DERECHO - MESAS */
+.panel-right { padding: 1.5rem; overflow-y: auto; }
+.tables-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.5rem; }
+.tables-title { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 2px; color: var(--brown); }
+.view-toggle { display: flex; gap: 6px; }
+.view-btn {
+  padding: 5px 14px; border-radius: 6px; border: 1px solid var(--border);
+  font-size: 11px; cursor: pointer; background: white; color: var(--brown-m);
+}
+.view-btn.active { background: var(--brown); color: white; border-color: var(--brown); }
+
+/* Salon layout */
+.salon-layout { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; }
+.salon-side { flex: 1; min-width: 280px; }
+.salon-side-label {
+  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 3px;
+  color: var(--gold-d); text-align: center; margin-bottom: 1rem;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.salon-divider {
+  width: 3px; background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+  align-self: stretch; flex-shrink: 0; border-radius: 2px;
+}
+
+/* Mesa card */
+.table-card {
+  background: white; border: 1px solid var(--border); border-radius: 12px;
+  margin-bottom: 10px; overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.table-card.drag-over { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,162,39,0.2); }
+.table-card.full { border-color: #d0b070; }
+.table-header {
+  padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; background: var(--gray);
+}
+.table-name { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 1px; color: var(--brown); }
+.table-count { font-size: 11px; color: var(--brown-m); }
+.table-count span { font-weight: 700; color: var(--gold-d); }
+.table-seats { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 6px; min-height: 44px; }
+.seat {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--gray); border-radius: 20px;
+  padding: 4px 10px 4px 4px; font-size: 11px; color: var(--brown);
+  border: 1px solid var(--border);
+}
+.seat-av {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--green-l); color: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+}
+.seat-remove {
+  background: none; border: none; color: var(--red); cursor: pointer;
+  font-size: 14px; line-height: 1; padding: 0 0 0 4px;
+}
+.drop-zone-hint {
+  font-size: 11px; color: var(--border); font-style: italic;
+  padding: 6px 0; width: 100%;
+}
+.table-progress { height: 3px; background: var(--border); }
+.table-progress-bar { height: 100%; background: var(--gold); transition: width 0.4s; }
+
+/* Modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(20,12,0,0.7); z-index: 500;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white; border-radius: 16px; padding: 2rem;
+  width: min(480px, 92vw); max-height: 90vh; overflow-y: auto;
+}
+.modal-title { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 2px; color: var(--brown); margin-bottom: 1.5rem; }
+.modal-field { margin-bottom: 1rem; }
+.modal-field label { display: block; font-size: 11px; color: var(--brown-m); margin-bottom: 4px; letter-spacing: 1px; }
+.modal-field input, .modal-field select {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+  font-family: 'Lato', sans-serif; font-size: 13px; color: var(--brown); background: var(--cream);
+}
+.modal-actions { display: flex; gap: 8px; margin-top: 1.5rem; justify-content: flex-end; }
+.btn-cancel { padding: 8px 20px; border: 1px solid var(--border); border-radius: 8px; background: white; cursor: pointer; font-size: 13px; }
+.btn-save { padding: 8px 20px; background: var(--gold); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; }
+.btn-delete { padding: 8px 20px; background: var(--red-l); color: var(--red); border: 1px solid #f0c0c0; border-radius: 8px; cursor: pointer; font-size: 13px; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px);
+  background: var(--brown); color: var(--gold-l); padding: 10px 24px;
+  border-radius: 30px; font-size: 13px; z-index: 1000;
+  transition: transform 0.4s; pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Export */
+.export-bar { padding: 1rem 1.2rem; background: var(--gray); border-top: 1px solid var(--border); }
+.btn-export { width: 100%; padding: 9px; background: var(--brown); color: var(--gold-l); border: none; border-radius: 8px; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 1px; cursor: pointer; }
+.btn-export:hover { background: #2e1a00; }
+</style>
+</head>
+<body>
+
+
+<!-- PANTALLA LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-seal">F&amp;E</div>
+    <div class="login-title">Gestión de Mesas</div>
+    <div class="login-sub">Acceso privado · Fabián &amp; Esmeralda</div>
+    <input class="login-input" type="password" id="loginPass"
+      placeholder="Ingresa la contraseña"
+      onkeydown="if(event.key==='Enter') verificarPass()">
+    <button class="login-btn" onclick="verificarPass()">Ingresar</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-hint">Solo el organizador tiene acceso</div>
+  </div>
+</div>
+
+<!-- CONTENIDO PRINCIPAL -->
+<div id="appContent">
+
+<div class="header">
+  <div>
+    <div class="header-title">Fabián &amp; Esmeralda</div>
+    <div class="header-sub">Gestión de mesas · 19 · XII · 2026</div>
+  </div>
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-num" id="st-total">0</div><div class="stat-label">Invitados</div></div>
+    <div class="stat"><div class="stat-num" id="st-confirmed">0</div><div class="stat-label">Confirmados</div></div>
+    <div class="stat"><div class="stat-num" id="st-assigned">0</div><div class="stat-label">Asignados</div></div>
+    <div class="stat"><div class="stat-num" id="st-seats">0</div><div class="stat-label">Lugares libres</div></div>
+    <div class="stat">
+      <button onclick="cerrarSesion()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(201,162,39,0.4);color:var(--gold-l);padding:6px 14px;border-radius:20px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;cursor:pointer;">
+        Cerrar sesión
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- PANEL IZQUIERDO -->
+  <div class="panel-left">
+    <div class="panel-section">
+      <div class="panel-title">Agregar invitado</div>
+      <div class="add-form">
+        <input type="text" id="inp-name" placeholder="Nombre completo" />
+        <input type="text" id="inp-phone" placeholder="Teléfono (opcional)" />
+        <select id="inp-status">
+          <option value="pending">Pendiente</option>
+          <option value="confirmed">Confirmado</option>
+          <option value="declined">No asistirá</option>
+        </select>
+        <input type="number" id="inp-guests" placeholder="Acompañantes (0)" min="0" max="5" value="0" />
+        <button class="btn-add" onclick="addGuest()">+ Agregar invitado</button>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Filtrar lista</div>
+      <div class="filters">
+        <button class="filter-btn active" onclick="setFilter('all',this)">Todos</button>
+        <button class="filter-btn" onclick="setFilter('pending',this)">Pendientes</button>
+        <button class="filter-btn" onclick="setFilter('confirmed',this)">Confirmados</button>
+        <button class="filter-btn" onclick="setFilter('unassigned',this)">Sin mesa</button>
+      </div>
+    </div>
+    <div class="guest-list" id="guestList"></div>
+    <div class="drag-hint">Arrastra un invitado confirmado hacia una mesa para asignarlo</div>
+    <div class="export-bar">
+      <button class="btn-export" onclick="exportCSV()">Exportar lista de invitados (CSV)</button>
+    </div>
+  </div>
+
+  <!-- PANEL DERECHO - MESAS -->
+  <div class="panel-right">
+    <div class="tables-header">
+      <div class="tables-title">Salón de bodas · 30 mesas</div>
+      <div class="view-toggle">
+        <button class="view-btn active" onclick="setView('salon',this)">Vista salón</button>
+        <button class="view-btn" onclick="setView('list',this)">Vista lista</button>
+      </div>
+    </div>
+    <div id="tablesContainer"></div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR INVITADO -->
+<div class="modal-overlay" id="guestModal">
+  <div class="modal">
+    <div class="modal-title">Editar invitado</div>
+    <div class="modal-field"><label>Nombre</label><input type="text" id="m-name"/></div>
+    <div class="modal-field"><label>Teléfono</label><input type="text" id="m-phone"/></div>
+    <div class="modal-field">
+      <label>Estado</label>
+      <select id="m-status">
+        <option value="pending">Pendiente</option>
+        <option value="confirmed">Confirmado</option>
+        <option value="declined">No asistirá</option>
+      </select>
+    </div>
+    <div class="modal-field"><label>Acompañantes</label><input type="number" id="m-guests" min="0" max="5"/></div>
+    <div class="modal-field">
+      <label>Mesa asignada</label>
+      <select id="m-table"><option value="">Sin asignar</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-delete" onclick="deleteGuest()">Eliminar</button>
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveGuest()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+</div> <!-- fin appContent -->
+
+<script>
+const SEATS_PER_TABLE = 10;
+const TOTAL_TABLES = 30;
+
+var guests = JSON.parse(localStorage.getItem('boda_guests') || '[]');
+var currentFilter = 'all';
+var currentView = 'salon';
+var editingId = null;
+var dragGuestId = null;
+
+function save() { localStorage.setItem('boda_guests', JSON.stringify(guests)); }
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function initials(name) {
+  return name.split(' ').slice(0,2).map(function(w){ return w[0]; }).join('').toUpperCase();
+}
+
+function statusLabel(s) {
+  return {pending:'Pendiente', confirmed:'Confirmado', declined:'No asiste'}[s] || s;
+}
+
+function addGuest() {
+  var name = document.getElementById('inp-name').value.trim();
+  if (!name) { showToast('Escribe el nombre del invitado'); return; }
+  guests.push({
+    id: uid(), name: name,
+    phone: document.getElementById('inp-phone').value.trim(),
+    status: document.getElementById('inp-status').value,
+    companions: parseInt(document.getElementById('inp-guests').value) || 0,
+    table: null
+  });
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-phone').value = '';
+  document.getElementById('inp-guests').value = '0';
+  save(); render();
+  showToast('Invitado agregado');
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderGuests();
+}
+
+function setView(v, btn) {
+  currentView = v;
+  document.querySelectorAll('.view-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderTables();
+}
+
+function filteredGuests() {
+  return guests.filter(function(g) {
+    if (currentFilter === 'pending') return g.status === 'pending';
+    if (currentFilter === 'confirmed') return g.status === 'confirmed';
+    if (currentFilter === 'unassigned') return !g.table && g.status !== 'declined';
+    return true;
+  });
+}
+
+function renderGuests() {
+  var list = document.getElementById('guestList');
+  var fg = filteredGuests();
+  if (fg.length === 0) {
+    list.innerHTML = '<div class="drag-hint">No hay invitados en esta categoría</div>';
+    return;
+  }
+  list.innerHTML = fg.map(function(g) {
+    var st = g.table ? 'assigned' : g.status;
+    var avCls = {pending:'av-pending', confirmed:'av-confirmed', declined:'av-declined', assigned:'av-assigned'}[st];
+    var badgeCls = {pending:'badge-pending', confirmed:'badge-confirmed', declined:'badge-declined', assigned:'badge-assigned'}[st];
+    var badgeTxt = g.table ? 'Mesa '+g.table : statusLabel(g.status);
+    return '<div class="guest-item" draggable="true" data-id="'+g.id+'"'+
+      ' ondragstart="onDragStart(event,\''+g.id+'\')"'+
+      ' ondragend="onDragEnd(event)"'+
+      ' ondblclick="openModal(\''+g.id+'\')"'+
+      '>'+
+      '<div class="guest-avatar '+avCls+'">'+initials(g.name)+'</div>'+
+      '<div class="guest-info">'+
+        '<div class="guest-name">'+g.name+'</div>'+
+        '<div class="guest-meta">'+(g.companions > 0 ? '+'+g.companions+' acomp.' : 'Solo')+(g.phone ? ' · '+g.phone : '')+'</div>'+
+      '</div>'+
+      '<span class="guest-badge '+badgeCls+'">'+badgeTxt+'</span>'+
+      '</div>';
+  }).join('');
+}
+
+function tableGuests(tableNum) {
+  return guests.filter(function(g){ return g.table === tableNum; });
+}
+
+function tableOccupied(tableNum) {
+  return tableGuests(tableNum).reduce(function(s,g){ return s + 1 + g.companions; }, 0);
+}
+
+function renderTables() {
+  var container = document.getElementById('tablesContainer');
+  if (currentView === 'salon') {
+    var leftTables = [], rightTables = [];
+    for (var i = 1; i <= 30; i++) {
+      if (i <= 15) leftTables.push(i); else rightTables.push(i);
+    }
+    container.innerHTML =
+      '<div class="salon-layout">'+
+      '<div class="salon-side"><div class="salon-side-label">Lado A · Mesas 1–15</div>'+
+        leftTables.map(tableCardHTML).join('')+
+      '</div>'+
+      '<div class="salon-divider"></div>'+
+      '<div class="salon-side"><div class="salon-side-label">Lado B · Mesas 16–30</div>'+
+        rightTables.map(tableCardHTML).join('')+
+      '</div>'+
+      '</div>';
+  } else {
+    var rows = [];
+    for (var j = 1; j <= 30; j++) rows.push(tableCardHTML(j));
+    container.innerHTML = '<div style="max-width:600px;margin:0 auto;">'+rows.join('')+'</div>';
+  }
+  attachTableEvents();
+}
+
+function tableCardHTML(num) {
+  var occ = tableOccupied(num);
+  var pct = Math.round((occ / SEATS_PER_TABLE) * 100);
+  var full = occ >= SEATS_PER_TABLE;
+  var tg = tableGuests(num);
+  var seatsHTML = tg.map(function(g) {
+    return '<div class="seat">'+
+      '<div class="seat-av">'+initials(g.name)+'</div>'+
+      g.name.split(' ')[0]+
+      (g.companions > 0 ? ' +'+g.companions : '')+
+      '<button class="seat-remove" onclick="removeFromTable(\''+g.id+'\')" title="Quitar de mesa">×</button>'+
+      '</div>';
+  }).join('');
+  if (!full) seatsHTML += '<div class="drop-zone-hint">Arrastra aquí · '+(SEATS_PER_TABLE - occ)+' lugares libres</div>';
+  return '<div class="table-card'+(full?' full':'')+'" id="tc-'+num+'"'+
+    ' ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'+num+')"'+
+    '>'+
+    '<div class="table-progress"><div class="table-progress-bar" style="width:'+pct+'%"></div></div>'+
+    '<div class="table-header" onclick="toggleTable('+num+')">'+
+      '<div class="table-name">Mesa '+num+'</div>'+
+      '<div class="table-count"><span>'+occ+'</span>/'+SEATS_PER_TABLE+' lugares</div>'+
+    '</div>'+
+    '<div class="table-seats" id="ts-'+num+'">'+seatsHTML+'</div>'+
+    '</div>';
+}
+
+function attachTableEvents() {}
+
+function toggleTable(num) {
+  var seats = document.getElementById('ts-'+num);
+  seats.style.display = seats.style.display === 'none' ? '' : (seats.style.display === '' ? 'none' : '');
+}
+
+function removeFromTable(gid) {
+  var g = guests.find(function(x){ return x.id === gid; });
+  if (g) { g.table = null; save(); render(); showToast('Invitado removido de la mesa'); }
+}
+
+function onDragStart(e, gid) {
+  var g = guests.find(function(x){ return x.id === gid; });
+  if (!g || g.status !== 'confirmed') {
+    e.preventDefault();
+    showToast('Solo se pueden asignar invitados confirmados');
+    return;
+  }
+  dragGuestId = gid;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(function(){
+    var el = document.querySelector('[data-id="'+gid+'"]');
+    if (el) el.classList.add('dragging');
+  }, 0);
+}
+
+function onDragEnd(e) {
+  document.querySelectorAll('.guest-item').forEach(function(el){ el.classList.remove('dragging'); });
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  var card = e.currentTarget;
+  card.classList.add('drag-over');
+}
+
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onDrop(e, tableNum) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!dragGuestId) return;
+  var g = guests.find(function(x){ return x.id === dragGuestId; });
+  if (!g) return;
+  var occ = tableOccupied(tableNum);
+  var needed = 1 + g.companions;
+  if (occ + needed > SEATS_PER_TABLE) {
+    showToast('No hay suficientes lugares en Mesa '+tableNum); return;
+  }
+  if (g.table) {
+    var msg = g.table === tableNum ? 'Ya está en esta mesa' : '';
+    if (msg) { showToast(msg); return; }
+  }
+  g.table = tableNum;
+  dragGuestId = null;
+  save(); render();
+  showToast(g.name + ' asignado a Mesa ' + tableNum);
+}
+
+function openModal(gid) {
+  editingId = gid;
+  var g = guests.find(function(x){ return x.id === gid; });
+  if (!g) return;
+  document.getElementById('m-name').value = g.name;
+  document.getElementById('m-phone').value = g.phone || '';
+  document.getElementById('m-status').value = g.status;
+  document.getElementById('m-guests').value = g.companions;
+  var sel = document.getElementById('m-table');
+  sel.innerHTML = '<option value="">Sin asignar</option>';
+  for (var i = 1; i <= 30; i++) {
+    var occ = tableOccupied(i);
+    var available = occ < SEATS_PER_TABLE;
+    sel.innerHTML += '<option value="'+i+'"'+(g.table === i ? ' selected':'')+(available ? '' : ' style="color:#aaa"')+'>Mesa '+i+' ('+occ+'/'+SEATS_PER_TABLE+')</option>';
+  }
+  document.getElementById('guestModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('guestModal').classList.remove('open');
+  editingId = null;
+}
+
+function saveGuest() {
+  var g = guests.find(function(x){ return x.id === editingId; });
+  if (!g) return;
+  g.name = document.getElementById('m-name').value.trim() || g.name;
+  g.phone = document.getElementById('m-phone').value.trim();
+  g.status = document.getElementById('m-status').value;
+  g.companions = parseInt(document.getElementById('m-guests').value) || 0;
+  var tbl = document.getElementById('m-table').value;
+  g.table = tbl ? parseInt(tbl) : null;
+  save(); render(); closeModal();
+  showToast('Cambios guardados');
+}
+
+function deleteGuest() {
+  guests = guests.filter(function(x){ return x.id !== editingId; });
+  save(); render(); closeModal();
+  showToast('Invitado eliminado');
+}
+
+function exportCSV() {
+  var rows = [['Nombre','Teléfono','Estado','Acompañantes','Mesa']];
+  guests.forEach(function(g) {
+    rows.push([g.name, g.phone||'', statusLabel(g.status), g.companions, g.table||'Sin asignar']);
+  });
+  var csv = rows.map(function(r){ return r.map(function(c){ return '"'+c+'"'; }).join(','); }).join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = 'invitados_boda_fabian_esmeralda.csv';
+  a.click();
+}
+
+function updateStats() {
+  var total = guests.length;
+  var confirmed = guests.filter(function(g){ return g.status === 'confirmed'; }).length;
+  var assigned = guests.filter(function(g){ return g.table !== null; }).length;
+  var usedSeats = guests.filter(function(g){ return g.table !== null; }).reduce(function(s,g){ return s + 1 + g.companions; }, 0);
+  var freeSeats = (TOTAL_TABLES * SEATS_PER_TABLE) - usedSeats;
+  document.getElementById('st-total').textContent = total;
+  document.getElementById('st-confirmed').textContent = confirmed;
+  document.getElementById('st-assigned').textContent = assigned;
+  document.getElementById('st-seats').textContent = freeSeats;
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+function render() { renderGuests(); renderTables(); updateStats(); }
+
+document.getElementById('inp-name').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') addGuest();
+});
+document.getElementById('guestModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+render();
+
+// ── LOGIN ──
+var PASS_HASH = '8e91a4c3d6f2b705a9e1c8d4f3b2a6e5d8c7f1a2b4e6d9c3f5a8b2d7e4c1f6a3';
+
+function hashPass(str) {
+  var hash = 0;
+  for (var i = 0; i < str.length; i++) {
+    var c = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + c;
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16).padStart(8,'0');
+}
+
+function verificarPass() {
+  var input = document.getElementById('loginPass').value;
+  var stored = localStorage.getItem('mesas_pass_hash');
+
+  if (!stored) {
+    // Primera vez: cualquier contraseña se acepta y se guarda
+    if (input.length < 4) {
+      document.getElementById('loginError').textContent = 'La contraseña debe tener al menos 4 caracteres';
+      return;
+    }
+    localStorage.setItem('mesas_pass_hash', hashPass(input));
+    acceder();
+    return;
+  }
+
+  if (hashPass(input) === stored) {
+    acceder();
+  } else {
+    var err = document.getElementById('loginError');
+    err.textContent = 'Contraseña incorrecta. Intenta de nuevo.';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+    setTimeout(function(){ err.textContent = ''; }, 3000);
+  }
+}
+
+function acceder() {
+  sessionStorage.setItem('mesas_auth', '1');
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appContent').style.display = 'block';
+  render();
+}
+
+function cerrarSesion() {
+  sessionStorage.removeItem('mesas_auth');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('appContent').style.display = 'none';
+  document.getElementById('loginPass').value = '';
+}
+
+// Verificar sesión activa
+if (sessionStorage.getItem('mesas_auth') === '1') {
+  acceder();
+} else {
+  setTimeout(function(){
+    document.getElementById('loginPass').focus();
+  }, 300);
+}
+</script>
+</div>
+</body>
+</html>

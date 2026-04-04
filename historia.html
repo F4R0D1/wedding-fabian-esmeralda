@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuestra Historia · Fabián & Esmeralda</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@400;600&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#c9a227;--gold-l:#e8d08a;--gold-d:#8b6508;
+  --cream:#fdf8ef;--cream-d:#f0e6cc;--brown:#3a2800;--brown-m:#6b4c00;--white:#fffef8;
+}
+html{scroll-behavior:smooth}
+body{background:var(--cream);font-family:'Lato',sans-serif;font-weight:300;color:var(--brown);overflow-x:hidden}
+
+.hero{
+  background:linear-gradient(160deg,#1a0f00 0%,#2e1a00 60%,#1a0f00 100%);
+  min-height:62vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:4rem 1.5rem;position:relative;overflow:hidden;
+}
+.hero-stars{position:absolute;inset:0;pointer-events:none}
+.star{position:absolute;background:var(--gold-l);border-radius:50%;animation:twinkle 3s infinite alternate}
+@keyframes twinkle{0%{opacity:.2;transform:scale(1)}100%{opacity:.9;transform:scale(1.3)}}
+.hero-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:5px;color:var(--gold);text-transform:uppercase;margin-bottom:1rem;position:relative;z-index:1}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(38px,9vw,64px);font-weight:300;color:var(--cream);line-height:1.1;margin-bottom:.5rem;position:relative;z-index:1}
+.hero-amp{font-style:italic;color:var(--gold)}
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:1.5rem auto;position:relative;z-index:1}
+.hero-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:18px;color:rgba(232,208,138,.75);position:relative;z-index:1}
+
+.timeline-wrap{max-width:960px;margin:0 auto;padding:5rem 1.5rem}
+.timeline-heading{text-align:center;margin-bottom:4rem}
+.tl-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:5px;color:var(--gold-d);text-transform:uppercase;margin-bottom:.8rem}
+.tl-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,6vw,42px);font-weight:300;color:var(--brown)}
+.tl-divider{width:50px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:1rem auto}
+
+.timeline{position:relative}
+.timeline::before{
+  content:'';position:absolute;left:50%;top:0;bottom:0;width:1.5px;
+  background:linear-gradient(to bottom,transparent 0%,var(--gold) 8%,var(--gold) 92%,transparent 100%);
+  transform:translateX(-50%);
+}
+@media(max-width:640px){.timeline::before{left:28px}}
+
+.tl-item{
+  display:grid;grid-template-columns:1fr 72px 1fr;align-items:center;
+  gap:0 1rem;margin-bottom:5rem;
+  opacity:0;transform:translateY(40px);
+  transition:opacity .7s ease,transform .7s ease;
+}
+.tl-item.visible{opacity:1;transform:translateY(0)}
+
+@media(max-width:640px){
+  .tl-item{grid-template-columns:56px 1fr;grid-template-rows:auto auto;gap:.8rem 0.5rem}
+}
+
+.tl-dot{
+  width:56px;height:56px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#f5e090,#c9a227 50%,#8b6508);
+  border:2.5px solid var(--gold-l);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;color:#3a2800;margin:0 auto;z-index:2;position:relative;
+  box-shadow:0 0 0 8px var(--cream);flex-shrink:0;
+}
+.tl-dot-year{font-size:9px;letter-spacing:1px;font-weight:600;line-height:1}
+.tl-dot-num{font-size:16px;font-weight:700;line-height:1.1}
+@media(max-width:640px){.tl-dot{width:44px;height:44px}.tl-dot-num{font-size:13px}.tl-dot-year{font-size:8px}}
+
+.tl-foto{
+  border-radius:16px;overflow:hidden;
+  border:1px solid var(--cream-d);
+  aspect-ratio:4/3;
+  box-shadow:0 4px 20px rgba(58,40,0,.08);
+}
+.tl-foto img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
+.tl-foto:hover img{transform:scale(1.05)}
+
+.tl-text{padding:0 1rem}
+.tl-year-badge{
+  display:inline-block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;
+  color:var(--gold-d);border:1px solid var(--cream-d);border-radius:20px;
+  padding:3px 12px;margin-bottom:.6rem;background:var(--white);
+}
+.tl-titulo{font-family:'Cormorant Garamond',serif;font-size:clamp(20px,3.5vw,28px);font-weight:400;color:var(--brown);margin-bottom:.2rem;line-height:1.2}
+.tl-subtitulo{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:var(--gold-d);margin-bottom:.6rem}
+.tl-desc{font-size:14px;line-height:1.8;color:var(--brown-m)}
+
+.tl-item.izquierda .tl-foto{grid-column:1;grid-row:1}
+.tl-item.izquierda .tl-dot{grid-column:2;grid-row:1}
+.tl-item.izquierda .tl-text{grid-column:3;grid-row:1;text-align:left}
+.tl-item.derecha .tl-foto{grid-column:3;grid-row:1}
+.tl-item.derecha .tl-dot{grid-column:2;grid-row:1}
+.tl-item.derecha .tl-text{grid-column:1;grid-row:1;text-align:right}
+@media(max-width:640px){
+  .tl-item.izquierda .tl-dot,.tl-item.derecha .tl-dot{grid-column:1;grid-row:1;margin:0}
+  .tl-item.izquierda .tl-text,.tl-item.derecha .tl-text{grid-column:2;grid-row:1;text-align:left;padding:0 0 0 .5rem}
+  .tl-item.izquierda .tl-foto,.tl-item.derecha .tl-foto{grid-column:1/-1;grid-row:2}
+}
+
+/* Línea especial para el último item (boda) */
+.tl-item.final-item .tl-dot{
+  width:68px;height:68px;
+  box-shadow:0 0 0 10px var(--cream),0 0 0 12px var(--gold-l);
+}
+.tl-item.final-item .tl-titulo{font-size:clamp(22px,4vw,32px);color:var(--gold-d)}
+
+.final-section{
+  background:linear-gradient(160deg,#1a0f00,#2e1a00);
+  text-align:center;padding:5rem 1.5rem;
+}
+.final-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,6vw,42px);font-style:italic;color:var(--gold-l);margin-bottom:.5rem}
+.final-date{font-family:'Cinzel',serif;font-size:12px;letter-spacing:4px;color:var(--gold);margin-bottom:2rem}
+.final-msg{font-size:14px;color:rgba(232,208,138,.7);line-height:1.9;max-width:480px;margin:0 auto 2.5rem;font-style:italic}
+.back-btn{
+  display:inline-block;border:1px solid rgba(201,162,39,.6);color:var(--gold-l);
+  font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;
+  padding:12px 30px;border-radius:30px;text-decoration:none;transition:all .3s;
+}
+.back-btn:hover{background:var(--gold);color:var(--brown)}
+
+/* BOTÓN MÚSICA */
+.music-btn{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;
+  width:48px;height:48px;border-radius:50%;
+  background:rgba(201,162,39,0.92);border:2px solid var(--gold-l);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.3);
+  transition:transform .2s,background .2s;font-size:20px;
+  color:white;
+}
+.music-btn:hover{transform:scale(1.1);background:var(--gold-d);}
+.music-tooltip{
+  position:fixed;bottom:5.2rem;right:1.5rem;z-index:999;
+  background:rgba(26,15,0,0.85);color:var(--gold-l);
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;
+  padding:5px 12px;border-radius:20px;white-space:nowrap;
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.music-btn:hover + .music-tooltip, .music-tooltip.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-stars" id="stars"></div>
+  <div style="position:relative;z-index:1">
+    <div class="hero-label">Una historia de amor</div>
+    <div class="hero-title">Fabián <span class="hero-amp">&</span> Esmeralda</div>
+    <div class="gold-line"></div>
+    <div class="hero-sub">Cada capítulo de nuestra historia nos trajo hasta aquí</div>
+  </div>
+</div>
+
+<div class="timeline-wrap">
+  <div class="timeline-heading">
+    <div class="tl-label">Nuestros momentos</div>
+    <div class="tl-title">El camino que nos unió</div>
+    <div class="tl-divider"></div>
+  </div>
+  <div class="timeline" id="timeline">
+
+    <div class="tl-item derecha" style="transition-delay:0.00s">
+      <div class="tl-foto">
+        <img src="img/h_noche.jpg" alt="Once upon a time...">
+      </div>
+      <div class="tl-dot">
+        <div class="tl-dot-year">20</div>
+        <div class="tl-dot-num">22</div>
+      </div>
+      <div class="tl-text">
+        <div class="tl-year-badge">2022</div>
+        <div class="tl-titulo">Once upon a time...</div>
+        <div class='tl-subtitulo'>En la fiesta del Ausente</div>
+        <div class="tl-desc">El día que nuestros caminos se cruzaron y el mundo cambió para siempre.</div>
+      </div>
+    </div>
+
+    <div class="tl-item izquierda" style="transition-delay:0.12s">
+      <div class="tl-foto">
+        <img src="img/h_acuario.jpg" alt="Explorando el mundo">
+      </div>
+      <div class="tl-dot">
+        <div class="tl-dot-year">20</div>
+        <div class="tl-dot-num">23</div>
+      </div>
+      <div class="tl-text">
+        <div class="tl-year-badge">2023</div>
+        <div class="tl-titulo">Explorando el mundo</div>
+        
+        <div class="tl-desc">Cada lugar se vuelve mágico cuando lo descubres con la persona correcta.</div>
+      </div>
+    </div>
+
+    <div class="tl-item derecha" style="transition-delay:0.24s">
+      <div class="tl-foto">
+        <img src="img/h_parque.jpg" alt="Aventuras sin fin">
+      </div>
+      <div class="tl-dot">
+        <div class="tl-dot-year">20</div>
+        <div class="tl-dot-num">23</div>
+      </div>
+      <div class="tl-text">
+        <div class="tl-year-badge">2023</div>
+        <div class="tl-titulo">Aventuras sin fin</div>
+        
+        <div class="tl-desc">Juntos en cada emoción, en cada momento que nos hizo reír.</div>
+      </div>
+    </div>
+
+    <div class="tl-item izquierda" style="transition-delay:0.36s">
+      <div class="tl-foto">
+        <img src="img/h_arcos.jpg" alt="Nochistlán, nuestro hogar">
+      </div>
+      <div class="tl-dot">
+        <div class="tl-dot-year">20</div>
+        <div class="tl-dot-num">24</div>
+      </div>
+      <div class="tl-text">
+        <div class="tl-year-badge">2024</div>
+        <div class="tl-titulo">Nochistlán, nuestro hogar</div>
+        
+        <div class="tl-desc">De regreso a nuestras raíces, donde el amor se hizo más fuerte bajo los arcos.</div>
+      </div>
+    </div>
+
+    <div class="tl-item derecha" style="transition-delay:0.48s">
+      <div class="tl-foto">
+        <img src="img/h_atardecer.jpg" alt="Atardeceres compartidos">
+      </div>
+      <div class="tl-dot">
+        <div class="tl-dot-year">20</div>
+        <div class="tl-dot-num">25</div>
+      </div>
+      <div class="tl-text">
+        <div class="tl-year-badge">2025</div>
+        <div class="tl-titulo">Atardeceres compartidos</div>
+        
+        <div class="tl-desc">Juntos mirando el horizonte, listos para todo lo que viene.</div>
+      </div>
+    </div>
+
+    <div class="tl-item izquierda final-item" style="transition-delay:0.60s">
+      <div class="tl-foto">
+        <img src="img/h_boda.jpg" alt="Nuestra boda civil">
+      </div>
+      <div class="tl-dot">
+        <div class="tl-dot-year">20</div>
+        <div class="tl-dot-num">26</div>
+      </div>
+      <div class="tl-text">
+        <div class="tl-year-badge">2026</div>
+        <div class="tl-titulo">Nuestra boda civil</div>
+        <div class='tl-subtitulo'>El primer 'sí' de muchos</div>
+        <div class="tl-desc">Dijimos 'sí' frente a quienes más amamos, con el corazón lleno de alegría y amor eterno.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="final-section">
+  <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,162,39,.5),transparent);margin:0 auto 2.5rem"></div>
+  <div class="final-title">Y el mejor capítulo está por comenzar</div>
+  <div class="final-date">19 · XII · 2026</div>
+  <p class="final-msg">
+    Cada foto, cada viaje, cada risa compartida nos preparó para este momento.<br>
+    Gracias por ser parte de nuestra historia.
+  </p>
+  <a class="back-btn" href="index.html">← Volver a la invitación</a>
+</div>
+
+
+<!-- MÚSICA -->
+<div id="ytHistoria" style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;"></div>
+<button class="music-btn" id="musicBtn" onclick="toggleMusica()" title="Música">♪</button>
+<div class="music-tooltip" id="musicTip">música · pausar</div>
+
+<script>
+(function(){
+  var s=document.getElementById('stars');
+  for(var i=0;i<55;i++){
+    var el=document.createElement('div');
+    el.className='star';
+    var sz=Math.random()*2.5+.5;
+    el.style.cssText='width:'+sz+'px;height:'+sz+'px;top:'+Math.random()*100+'%;left:'+Math.random()*100+'%;animation-delay:'+Math.random()*3+'s;animation-duration:'+(2+Math.random()*3)+'s';
+    s.appendChild(el);
+  }
+})();
+var items=document.querySelectorAll('.tl-item');
+var obs=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:0.18});
+items.forEach(function(el){obs.observe(el);});
+
+// ── MÚSICA YOUTUBE ──
+var ytPlayer=null, playing=false;
+function onYouTubeIframeAPIReady(){
+  ytPlayer=new YT.Player('ytHistoria',{
+    height:'1',width:'1',
+    videoId:'2Kiob5f9A1g',
+    playerVars:{autoplay:1,controls:0,loop:1,playlist:'2Kiob5f9A1g',mute:0},
+    events:{
+      onReady:function(e){
+        e.target.setVolume(55);
+        e.target.playVideo();
+        playing=true;
+        actualizarBtn();
+      }
+    }
+  });
+}
+function toggleMusica(){
+  if(!ytPlayer) return;
+  if(playing){ ytPlayer.pauseVideo(); playing=false; }
+  else { ytPlayer.playVideo(); playing=true; }
+  actualizarBtn();
+}
+function actualizarBtn(){
+  var btn=document.getElementById('musicBtn');
+  var tip=document.getElementById('musicTip');
+  btn.textContent = playing ? '♪' : '♩';
+  btn.style.background = playing ? 'rgba(201,162,39,0.92)' : 'rgba(90,60,0,0.7)';
+  tip.textContent = playing ? 'música · pausar' : 'música · reproducir';
+}
+var sc=document.createElement('script');
+sc.src='https://www.youtube.com/iframe_api';
+document.head.appendChild(sc);
+</script>
+</body>
+</html>
