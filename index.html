@@ -162,7 +162,6 @@
   #invitation {
     min-height: 100vh;
     opacity: 0;
-    display: none;
     transform: translateY(30px);
     transition: opacity 0.9s ease, transform 0.9s ease;
   }
@@ -684,7 +683,7 @@
     </div>
 
     <!-- Sello -->
-    <div class="seal" id="seal" onclick="openEnvelope()" style="cursor:pointer">
+    <div class="seal" id="seal">
       <div class="seal-initials">F&amp;E</div>
       <div class="seal-hint">Abrir</div>
     </div>
@@ -1088,14 +1087,14 @@
   }
 
   function startMusic() {
-    try {
-      if(ytPlayer_inst && ytPlayer_inst.playVideo) {
+    try{
+      if(ytPlayer_inst && ytPlayer_inst.playVideo){
         ytPlayer_inst.playVideo();
-        musicPlaying = true;
-        document.getElementById('musicIcon').textContent = '🎵';
-        document.getElementById('musicControls').style.display = 'flex';
+        musicPlaying=true;
+        document.getElementById('musicIcon').textContent='🎵';
+        document.getElementById('musicControls').style.display='flex';
       }
-    } catch(e) {}
+    }catch(e){}
   }
 
   function toggleMusic() {
@@ -1111,11 +1110,17 @@
     }
   }
 
-  try {
-    var ytScript = document.createElement('script');
-    ytScript.src = 'https://www.youtube.com/iframe_api';
+  try{
+    var ytScript=document.createElement('script');
+    ytScript.src='https://www.youtube.com/iframe_api';
     document.head.appendChild(ytScript);
-  } catch(e) { console.log('YouTube no disponible'); }
+  }catch(e){}
+
+  // Click en el sello por si el onclick no se dispara
+  var sealEl=document.getElementById('seal');
+  if(sealEl) sealEl.addEventListener('click', openEnvelope);
+  var contEl=document.getElementById('envContainer');
+  if(contEl) contEl.addEventListener('click', openEnvelope);
 
   // ── ESTRELLAS ──
   (function(){
@@ -1182,53 +1187,39 @@
     if(opened) return;
     opened=true;
 
-    // Animar el sobre
+    // Animar sobre
     document.getElementById('envFlap').classList.add('opened');
     document.getElementById('seal').classList.add('gone');
     document.getElementById('envHint').classList.add('gone');
 
-    // Música — no bloquea si falla
+    // Música y pájaros — no bloquean si fallan
+    setTimeout(function(){ try{startMusic();}catch(e){} }, 300);
+    setTimeout(function(){ try{crearPajaros();}catch(e){} }, 350);
     setTimeout(function(){
-      try { startMusic(); } catch(e){}
-    }, 200);
-
-    // Pájaros — no bloquea si falla
-    setTimeout(function(){
-      try { crearPajaros(); } catch(e){}
-    }, 300);
-
-    setTimeout(function(){
-      try {
-        document.getElementById('birdsLayer').classList.add('show');
-      } catch(e){}
+      var bl=document.getElementById('birdsLayer');
+      if(bl) bl.classList.add('show');
     }, 400);
 
-    // Mostrar invitación — siempre se ejecuta
+    // Mostrar invitación — SIEMPRE se ejecuta
     setTimeout(function(){
-      // Ocultar pantalla del sobre
-      var screen = document.getElementById('envelope-screen');
-      if(screen){
-        screen.style.opacity = '0';
-        screen.style.transition = 'opacity 0.5s';
-        setTimeout(function(){
-          screen.style.display = 'none';
-        }, 500);
-      }
-      // Mostrar invitación
-      var inv = document.getElementById('invitation');
+      var sc=document.getElementById('envelope-screen');
+      if(sc){ sc.style.opacity='0'; sc.style.transition='opacity 0.5s'; }
+      setTimeout(function(){ if(sc) sc.style.display='none'; }, 500);
+
+      var inv=document.getElementById('invitation');
       if(inv){
-        inv.style.display = 'block';
-        inv.style.opacity = '0';
-        inv.style.transform = 'translateY(30px)';
-        inv.style.transition = 'opacity 0.9s ease, transform 0.9s ease';
+        inv.style.display='block';
+        inv.style.opacity='0';
+        inv.style.transform='translateY(30px)';
+        inv.style.transition='opacity 0.9s ease, transform 0.9s ease';
         setTimeout(function(){
-          inv.style.opacity = '1';
-          inv.style.transform = 'translateY(0)';
+          inv.style.opacity='1';
+          inv.style.transform='translateY(0)';
           inv.classList.add('visible');
-          window.scrollTo(0, 0);
-        }, 100);
+          window.scrollTo(0,0);
+        },150);
       }
-    }, 1500);
+    },1400);
   }
 
   // ── SCROLL REVEAL ──
