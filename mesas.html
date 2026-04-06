@@ -284,6 +284,10 @@ body { font-family: 'Lato', sans-serif; background: var(--cream); color: var(--b
     <div class="stat"><div class="stat-num" id="st-assigned">0</div><div class="stat-label">Asignados</div></div>
     <div class="stat"><div class="stat-num" id="st-seats">0</div><div class="stat-label">Lugares libres</div></div>
     <div class="stat">
+      <button id="syncBtn" onclick="cargarDesdeSheets()" style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.6);color:var(--gold-l);padding:6px 14px;border-radius:20px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;cursor:pointer;margin-right:8px;">
+        ↻ Sincronizar Sheets
+      </button>
+      <span id="syncMsg" style="font-size:11px;color:var(--gold-l);margin-right:12px;"></span>
       <button onclick="cerrarSesion()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(201,162,39,0.4);color:var(--gold-l);padding:6px 14px;border-radius:20px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;cursor:pointer;">
         Cerrar sesión
       </button>
@@ -371,14 +375,113 @@ body { font-family: 'Lato', sans-serif; background: var(--cream); color: var(--b
 <script>
 const SEATS_PER_TABLE = 10;
 const TOTAL_TABLES = 30;
+const SHEET_CSV_URL =  + SHEET_CSV + ;
+const APPS_SCRIPT_URL =  + APPS_SCRIPT_URL + ;
 
-var guests = JSON.parse(localStorage.getItem('boda_guests') || '[]');
+// Cargar desde Sheets al inicio, complementar con localStorage
+var guests = [];
+var sheetsLoaded = false;
+
+function cargarDesdeSheets() {
+  var syncBtn = document.getElementById('syncBtn');
+  if(syncBtn) { syncBtn.textContent = 'Cargando...'; syncBtn.disabled = true; }
+
+  fetch(SHEET_CSV_URL)
+    .then(function(r){ return r.text(); })
+    .then(function(csv){
+      var lineas = csv.trim().split('\n');
+      if(lineas.length < 2){ mostrarSync('Sin datos en Sheets aún'); return; }
+
+      // Parsear CSV (skip header fila 0)
+      var nuevos = [];
+      for(var i=1; i<lineas.length; i++){
+        var cols = parsearCSV(lineas[i]);
+        if(!cols[1] || cols[1].trim()==='') continue; // skip vacíos
+        var nombre = cols[1] ? cols[1].trim().replace(/^"|"$/g,'') : '';
+        var telefono = cols[2] ? cols[2].trim().replace(/^"|"$/g,'') : '';
+        var asistencia = cols[3] ? cols[3].trim().replace(/^"|"$/g,'') : '';
+        var acomp = parseInt(cols[4]) || 0;
+        var mesa = cols[6] ? cols[6].trim().replace(/^"|"$/g,'') : '';
+        if(!nombre) continue;
+
+        // Buscar si ya existe en lista local por nombre+teléfono
+        var existente = guests.find(function(g){
+          return g.name.toLowerCase()===nombre.toLowerCase();
+        });
+
+        if(existente){
+          // Actualizar estado desde Sheets
+          existente.status = asistencia==='Confirmado' ? 'confirmed' : asistencia==='No asiste' ? 'declined' : 'pending';
+          existente.companions = acomp;
+          if(mesa && mesa!=='Sin asignar' && !isNaN(parseInt(mesa))){
+            existente.table = parseInt(mesa);
+          }
+        } else {
+          // Nuevo invitado desde Sheets
+          nuevos.push({
+            id: 'sh_'+i+'_'+Date.now(),
+            name: nombre,
+            phone: telefono,
+            status: asistencia==='Confirmado' ? 'confirmed' : asistencia==='No asiste' ? 'declined' : 'pending',
+            companions: acomp,
+            message: '',
+            table: (mesa && mesa!=='Sin asignar' && !isNaN(parseInt(mesa))) ? parseInt(mesa) : null,
+            fromSheets: true
+          });
+        }
+      }
+
+      // Agregar nuevos al array principal
+      guests = guests.concat(nuevos);
+      save();
+      sheetsLoaded = true;
+      render();
+      mostrarSync('✓ ' + (lineas.length-1) + ' registros sincronizados');
+    })
+    .catch(function(err){
+      mostrarSync('Sin conexión — usando datos locales');
+      render();
+    })
+    .finally(function(){
+      if(syncBtn){ syncBtn.textContent = '↻ Sincronizar Sheets'; syncBtn.disabled = false; }
+    });
+}
+
+function parsearCSV(linea) {
+  var cols = [], cur = '', inQ = false;
+  for(var i=0;i<linea.length;i++){
+    var c=linea[i];
+    if(c==='"'){ inQ=!inQ; }
+    else if(c===','&&!inQ){ cols.push(cur); cur=''; }
+    else { cur+=c; }
+  }
+  cols.push(cur);
+  return cols;
+}
+
+function actualizarMesaEnSheets(nombreInvitado, numMesa) {
+  fetch(APPS_SCRIPT_URL, {
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({accion:'actualizar_mesa', nombre: nombreInvitado, mesa: numMesa || 'Sin asignar'})
+  }).catch(function(){});
+}
+
+function mostrarSync(msg) {
+  var el = document.getElementById('syncMsg');
+  if(el){ el.textContent = msg; setTimeout(function(){ el.textContent=''; }, 4000); }
+}
+
+var guests_local = JSON.parse(localStorage.getItem('boda_guests') || '[]');
+guests = guests_local;
 var currentFilter = 'all';
 var currentView = 'salon';
 var editingId = null;
 var dragGuestId = null;
 
-function save() { localStorage.setItem('boda_guests', JSON.stringify(guests)); }
+function save() {
+  localStorage.setItem('boda_guests', JSON.stringify(guests));
+}
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
@@ -576,6 +679,7 @@ function onDrop(e, tableNum) {
   g.table = tableNum;
   dragGuestId = null;
   save(); render();
+  actualizarMesaEnSheets(g.name, tableNum);
   showToast(g.name + ' asignado a Mesa ' + tableNum);
 }
 
@@ -707,6 +811,8 @@ function acceder() {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('appContent').style.display = 'block';
   render();
+  // Cargar datos de Sheets automáticamente al entrar
+  setTimeout(cargarDesdeSheets, 500);
 }
 
 function cerrarSesion() {
