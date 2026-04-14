@@ -1246,6 +1246,8 @@
 
 
   // ── RSVP ──
+  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy1V7BsB829Wgf2lrW3QaUJL6cMw1jpWmw98xwm8V1YOHqrxa_ZNQxILu-pKoQsilB/exec'
+  
   var rsvpAttend = null;
   function selectAttend(val) {
     rsvpAttend = val;
@@ -1261,9 +1263,10 @@
     var phone = document.getElementById('rsvp-phone').value.trim();
     var companions = parseInt(document.getElementById('rsvp-guests').value) || 0;
     var msg = document.getElementById('rsvp-msg').value.trim();
+	var asistencia = rsvpAttend ? 'Confirmado' : 'No asiste';
     // Guardar en localStorage compartido con mesas.html
     var existing = JSON.parse(localStorage.getItem('boda_guests') || '[]');
-    var newGuest = {
+    existing.push({
       id: Date.now().toString(36) + Math.random().toString(36).slice(2,5),
       name: name,
       phone: phone,
@@ -1271,9 +1274,25 @@
       companions: companions,
       message: msg,
       table: null
-    };
-    existing.push(newGuest);
+    });
     localStorage.setItem('boda_guests', JSON.stringify(existing));
+	// Google Sheets
+	fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      accion:       'rsvp',
+      nombre:       name,
+      telefono:     phone,
+      asistencia:   asistencia,
+      acompanantes: companions,
+      mensaje:      msg
+    })
+    }).catch(function() {
+    // Silencioso — no interrumpir al usuario si falla la red
+    });
+	
     // WhatsApp
     var txt = rsvpAttend
       ? '✅ *Confirmación de asistencia*%0A%0ANombre: ' + encodeURIComponent(name) + '%0AAcompañantes: ' + companions + (msg ? '%0AMensaje: ' + encodeURIComponent(msg) : '')
