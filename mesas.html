@@ -376,7 +376,56 @@ body { font-family: 'Lato', sans-serif; background: var(--cream); color: var(--b
 const SEATS_PER_TABLE = 10;
 const TOTAL_TABLES = 30;
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/12G2-KcqVwIeTQ0tgygZ7diEYFjimQuAgcBttudVCb0w/gviz/tq?tqx=out:csv';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxgD1m-uFl--j7F7f5CILCxyneZgUV8ZUU-k6qJanEBaT7Yf5lDqY1xfmfUqJWOWY7r/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvYA_DrZUy5mCH0_6ygzNz1QivwrWIKA4dKjdzfsK84oDrs5PqCBl36CKihuo3D-4n/exec';
+
+/*
+  ══════════════════════════════════════════════════════════════
+  APPS SCRIPT REQUERIDO — Pega este código en tu Apps Script
+  y vuelve a publicar como "Aplicación web" (Anyone, anon):
+
+  function doPost(e) {
+    var data = JSON.parse(e.postData.contents);
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var accion = data.accion;
+
+    if (accion === 'nuevo_invitado') {
+      // Buscar si ya existe
+      var rows = sheet.getDataRange().getValues();
+      for (var i = 1; i < rows.length; i++) {
+        if (rows[i][1] && rows[i][1].toString().toLowerCase() === data.nombre.toLowerCase()) {
+          return ContentService.createTextOutput('existe');
+        }
+      }
+      // Agregar nueva fila
+      var lastRow = sheet.getLastRow() + 1;
+      sheet.getRange(lastRow, 1).setValue(lastRow - 1);  // ID
+      sheet.getRange(lastRow, 2).setValue(data.nombre);
+      sheet.getRange(lastRow, 3).setValue(data.telefono || '');
+      sheet.getRange(lastRow, 4).setValue(data.asistencia || 'Pendiente');
+      sheet.getRange(lastRow, 5).setValue(data.acompanantes || 0);
+      sheet.getRange(lastRow, 6).setValue('');
+      sheet.getRange(lastRow, 7).setValue(data.mesa || 'Sin asignar');
+      return ContentService.createTextOutput('ok');
+    }
+
+    if (accion === 'actualizar_mesa' || accion === 'actualizar_invitado') {
+      var rows = sheet.getDataRange().getValues();
+      for (var i = 1; i < rows.length; i++) {
+        if (rows[i][1] && rows[i][1].toString().toLowerCase() === data.nombre.toLowerCase()) {
+          if (data.mesa !== undefined) sheet.getRange(i+1, 7).setValue(data.mesa);
+          if (accion === 'actualizar_invitado') {
+            if (data.telefono !== undefined) sheet.getRange(i+1, 3).setValue(data.telefono);
+            if (data.asistencia !== undefined) sheet.getRange(i+1, 4).setValue(data.asistencia);
+            if (data.acompanantes !== undefined) sheet.getRange(i+1, 5).setValue(data.acompanantes);
+          }
+          return ContentService.createTextOutput('ok');
+        }
+      }
+    }
+    return ContentService.createTextOutput('no_encontrado');
+  }
+  ══════════════════════════════════════════════════════════════
+*/
 
 // Cargar desde Sheets al inicio, complementar con localStorage
 var guests = [];
@@ -467,6 +516,40 @@ function actualizarMesaEnSheets(nombreInvitado, numMesa) {
   }).catch(function(){});
 }
 
+// ✅ NUEVO: Registrar invitado nuevo en Sheets
+function registrarInvitadoEnSheets(g) {
+  var statusLabel = {pending:'Pendiente', confirmed:'Confirmado', declined:'No asiste'}[g.status] || 'Pendiente';
+  fetch(APPS_SCRIPT_URL, {
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      accion: 'nuevo_invitado',
+      nombre: g.name,
+      telefono: g.phone || '',
+      asistencia: statusLabel,
+      acompanantes: g.companions,
+      mesa: g.table || 'Sin asignar'
+    })
+  }).catch(function(){});
+}
+
+// ✅ NUEVO: Actualizar todos los datos de un invitado en Sheets
+function actualizarInvitadoEnSheets(g) {
+  var statusLabel = {pending:'Pendiente', confirmed:'Confirmado', declined:'No asiste'}[g.status] || 'Pendiente';
+  fetch(APPS_SCRIPT_URL, {
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      accion: 'actualizar_invitado',
+      nombre: g.name,
+      telefono: g.phone || '',
+      asistencia: statusLabel,
+      acompanantes: g.companions,
+      mesa: g.table || 'Sin asignar'
+    })
+  }).catch(function(){});
+}
+
 function mostrarSync(msg) {
   var el = document.getElementById('syncMsg');
   if(el){ el.textContent = msg; setTimeout(function(){ el.textContent=''; }, 4000); }
@@ -496,17 +579,20 @@ function statusLabel(s) {
 function addGuest() {
   var name = document.getElementById('inp-name').value.trim();
   if (!name) { showToast('Escribe el nombre del invitado'); return; }
-  guests.push({
+  var nuevoInvitado = {
     id: uid(), name: name,
     phone: document.getElementById('inp-phone').value.trim(),
     status: document.getElementById('inp-status').value,
     companions: parseInt(document.getElementById('inp-guests').value) || 0,
     table: null
-  });
+  };
+  guests.push(nuevoInvitado);
   document.getElementById('inp-name').value = '';
   document.getElementById('inp-phone').value = '';
   document.getElementById('inp-guests').value = '0';
   save(); render();
+  // ✅ FIX: Registrar nuevo invitado en Sheets
+  registrarInvitadoEnSheets(nuevoInvitado);
   showToast('Invitado agregado');
 }
 
@@ -716,6 +802,8 @@ function saveGuest() {
   var tbl = document.getElementById('m-table').value;
   g.table = tbl ? parseInt(tbl) : null;
   save(); render(); closeModal();
+  // ✅ FIX: Sincronizar cambios con Sheets
+  actualizarInvitadoEnSheets(g);
   showToast('Cambios guardados');
 }
 
